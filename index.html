@@ -297,6 +297,23 @@ function toggleDetail(i) {
   el.classList.toggle('hidden');
 }
 
+function precargarFeedback(i, url) {
+  const f = feedbackPorUrl[url];
+  if (!f) return;
+  const set = (id, valor) => { const el = document.getElementById(id); if (el && valor) el.value = valor; };
+  set('fb-estado-' + i, f.estadoCompra);
+  set('fb-repetiria-' + i, f.repetiria);
+  set('fb-comentario-' + i, f.comentario);
+  set('fb-rating-' + i, f.ratingPersonal);
+  set('fb-acidez-' + i, f.acidezPercibida);
+  set('fb-dulzor-' + i, f.dulzorPercibido);
+  set('fb-cuerpo-' + i, f.cuerpoPercibido);
+  set('fb-amargor-' + i, f.amargorPercibido);
+  set('fb-tostado-' + i, f.tostadoPercibido);
+  set('fb-espresso-' + i, f.resultadoEspresso);
+  set('fb-leche-' + i, f.resultadoConLeche);
+}
+
 const FEEDBACK_TOKEN = 'CoffeBuyerBeto';
 
 async function guardarFeedback(i) {
@@ -340,7 +357,7 @@ async function guardarFeedback(i) {
     statusEl.innerText = data.nueva ? '✓ Guardado' : '✓ Actualizado';
     statusEl.className = 'text-xs text-center mt-1.5 text-moss';
 
-    feedbackPorUrl[c.url] = { url: c.url, estadoCompra: body.estadoCompra, repetiria: body.repetiria, ratingPersonal: body.ratingPersonal };
+    feedbackPorUrl[c.url] = Object.assign({ url: c.url }, body);
     document.getElementById('feedback-badge-' + i).innerHTML = feedbackBadgeHtml(c.url);
 
     const card = document.getElementById('feedback-badge-' + i).closest('.border-l-4');
@@ -535,6 +552,8 @@ function aplicarFiltros() {
   document.getElementById('list').innerHTML = filtrados.length
     ? filtrados.map((c, i) => cardHtml(c, i)).join('')
     : '<p class="text-center text-sm text-inkmuted py-10 font-mono">Sin resultados con estos filtros.</p>';
+
+  filtrados.forEach((c, i) => precargarFeedback(i, c.url));
 }
 
 async function init() {
