@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Coffee Buyer AI</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -75,11 +75,11 @@
 
     <div class="flex items-baseline justify-between mb-3 px-0.5">
       <h1 class="font-display font-semibold text-lg tracking-tight">Coffee Buyer</h1>
-      <span class="font-mono text-[10px] text-inkmuted tracking-widest uppercase">V4</span>
+      <span class="font-mono text-sm text-inkmuted tracking-widest uppercase">V4</span>
     </div>
 
     <!-- Banner de salud -->
-    <div id="healthBanner" class="rounded-lg px-3 py-2 mb-3 flex items-center gap-2 text-xs font-mono border border-line bg-surface text-inkmuted">
+    <div id="healthBanner" class="rounded-lg px-3 py-2 mb-3 flex items-center gap-2 text-sm font-mono border border-line bg-surface text-inkmuted">
       <span>Cargando estado del sistema…</span>
     </div>
 
@@ -87,18 +87,18 @@
     <div id="filtros" class="bg-surface border border-line rounded-xl p-3 mb-3 hidden">
       <div class="grid grid-cols-2 gap-2">
         <details id="origenPanel" class="relative">
-          <summary class="list-none cursor-pointer text-sm px-3 py-2 rounded-lg border border-line flex items-center justify-between text-ink">
-            <span id="origenLabel">Origen</span><span class="text-inkmuted text-xs">▾</span>
+          <summary class="list-none cursor-pointer text-base px-3 py-2 rounded-lg border border-line flex items-center justify-between text-ink">
+            <span id="origenLabel">Origen</span><span class="text-inkmuted text-sm">▾</span>
           </summary>
           <div class="absolute z-10 mt-1 w-56 bg-surface border border-line rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto">
-            <input id="origenBuscar" type="text" placeholder="Buscar país…" class="w-full text-sm border border-line rounded-md px-2 py-1 mb-2 bg-paper">
+            <input id="origenBuscar" type="text" placeholder="Buscar país…" class="w-full text-base border border-line rounded-md px-2 py-1 mb-2 bg-paper">
             <div id="origenOpciones" class="flex flex-col gap-1"></div>
           </div>
         </details>
 
         <details id="procesoPanel" class="relative">
-          <summary class="list-none cursor-pointer text-sm px-3 py-2 rounded-lg border border-line flex items-center justify-between text-ink">
-            <span id="procesoLabel">Proceso</span><span class="text-inkmuted text-xs">▾</span>
+          <summary class="list-none cursor-pointer text-base px-3 py-2 rounded-lg border border-line flex items-center justify-between text-ink">
+            <span id="procesoLabel">Proceso</span><span class="text-inkmuted text-sm">▾</span>
           </summary>
           <div class="absolute z-10 mt-1 w-56 bg-surface border border-line rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto">
             <div id="procesoOpciones" class="flex flex-col gap-1"></div>
@@ -107,7 +107,7 @@
       </div>
 
       <div class="mt-3">
-        <div class="flex items-center justify-between text-xs font-mono text-inkmuted mb-1">
+        <div class="flex items-center justify-between text-sm font-mono text-inkmuted mb-1">
           <span class="uppercase tracking-wide">Precio/kg</span>
           <span id="precioLabel"></span>
         </div>
@@ -116,16 +116,16 @@
       </div>
 
       <div class="flex items-center justify-between mt-2">
-        <span id="resultCount" class="text-xs font-mono text-inkmuted"></span>
-        <button id="limpiarFiltros" class="text-xs text-inkmuted underline">Limpiar filtros</button>
+        <span id="resultCount" class="text-sm font-mono text-inkmuted"></span>
+        <button id="limpiarFiltros" class="text-sm text-inkmuted underline">Limpiar filtros</button>
       </div>
     </div>
 
     <!-- Estado de carga / error -->
-    <div id="loadingState" class="text-center text-sm text-inkmuted py-10 font-mono">
+    <div id="loadingState" class="text-center text-base text-inkmuted py-10 font-mono">
       Cargando recomendaciones…
     </div>
-    <div id="errorState" class="hidden text-center text-sm text-clay py-10 px-4"></div>
+    <div id="errorState" class="hidden text-center text-base text-clay py-10 px-4"></div>
 
     <!-- Listado -->
     <div id="list" class="flex flex-col gap-2.5"></div>
@@ -181,7 +181,7 @@ function feedbackBadgeHtml(url) {
   }[f.repetiria] || 'bg-paper text-inkmuted';
 
   const texto = f.estadoCompra + (f.repetiria ? ' · Repetiría: ' + f.repetiria : '');
-  return `<span class="inline-block text-[11px] font-medium px-2 py-0.5 rounded mt-1.5 tracking-wide ${estilo}">✓ ${texto}</span>`;
+  return `<span class="inline-block text-sm font-medium px-2 py-0.5 rounded mt-1.5 tracking-wide ${estilo}">✓ ${texto}</span>`;
 }
 
 function tiendaInfoHtml(nombreTienda) {
@@ -210,17 +210,17 @@ function cardHtml(c, i) {
     <span class="absolute -top-4 -right-1 font-display font-bold text-[84px] leading-none text-ink opacity-[0.05] pointer-events-none select-none">${numRanking}</span>
 
     <div class="relative z-10 flex items-start gap-3">
-      <div class="w-8 h-8 rounded-full bg-paper border border-line flex items-center justify-center text-xs font-mono text-espresso shrink-0">${numRanking}</div>
+      <div class="w-8 h-8 rounded-full bg-paper border border-line flex items-center justify-center text-sm font-mono text-espresso shrink-0">${numRanking}</div>
       <div class="flex-1 min-w-0">
         <p class="font-display font-semibold text-[19px] leading-snug text-ink">${c.cafe || 'Sin nombre'}</p>
-        <p class="text-xs text-inkmuted mt-0.5">${meta}</p>
+        <p class="text-sm text-inkmuted mt-0.5">${meta}</p>
         <span id="feedback-badge-${i}">${feedbackBadgeHtml(c.url)}</span>
       </div>
     </div>
 
-    ${c.notasCorregidas ? `<p class="relative z-10 text-[13px] text-inkmuted italic mt-2.5 font-display">☕ ${c.notasCorregidas}</p>` : ''}
+    ${c.notasCorregidas ? `<p class="relative z-10 text-base text-inkmuted italic mt-2.5 font-display">☕ ${c.notasCorregidas}</p>` : ''}
 
-    <div class="relative z-10 flex items-center gap-3 mt-2.5 text-[11px] font-mono text-inkmuted uppercase tracking-wide">
+    <div class="relative z-10 flex items-center gap-3 mt-2.5 text-sm font-mono text-inkmuted uppercase tracking-wide">
       ${c.altura ? `<span>${c.altura} msnm</span>` : ''}
       ${c.scoreMetadata !== '' && c.scoreMetadata !== undefined ? `<span>Datos ${fmtScore(c.scoreMetadata)}% completos</span>` : ''}
     </div>
@@ -230,11 +230,11 @@ function cardHtml(c, i) {
     <div class="relative z-10 flex items-center justify-between">
       <div class="flex items-baseline gap-1">
         <span class="font-display font-bold text-2xl text-ink">$${fmtPrecio(c.precioKg)}</span>
-        <span class="text-xs text-inkmuted">/kg</span>
+        <span class="text-sm text-inkmuted">/kg</span>
       </div>
       <div class="flex items-center gap-2.5">
         <div class="flex flex-col items-end gap-1">
-          <span class="text-[9px] font-mono text-inkmuted tracking-wide">CONF ${fmtScore(c.scoreConfianza)}</span>
+          <span class="text-[12px] font-mono text-inkmuted tracking-wide">CONF ${fmtScore(c.scoreConfianza)}</span>
           <div class="w-16 h-[5px] rounded-full bg-line overflow-hidden">
             <div class="h-full rounded-full" style="width:${pctConf}%; background:${colorConfianza(scoreConf)}"></div>
           </div>
@@ -244,23 +244,23 @@ function cardHtml(c, i) {
       </div>
     </div>
 
-    <div id="detail-${i}" class="relative z-10 hidden mt-3 pt-3 border-t border-line text-xs text-inkmuted space-y-1.5">
+    <div id="detail-${i}" class="relative z-10 hidden mt-3 pt-3 border-t border-line text-sm text-inkmuted space-y-1.5">
       ${c.riesgoNotas ? `<p class="text-clay">⚠️ ${c.riesgoNotas}</p>` : ''}
       ${c.datosFaltantes ? `<p>Datos faltantes: ${c.datosFaltantes}</p>` : ''}
       ${tiendaInfoHtml(c.tienda)}
 
       <div class="pt-3 mt-2 border-t border-line">
-        <p class="text-xs font-semibold text-ink mb-2 font-display tracking-wide">Tu experiencia</p>
+        <p class="text-sm font-semibold text-ink mb-2 font-display tracking-wide">Tu experiencia</p>
 
         <div class="grid grid-cols-2 gap-2">
-          <select id="fb-estado-${i}" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
+          <select id="fb-estado-${i}" class="text-sm border border-line rounded-md px-2.5 py-2 bg-paper text-ink">
             <option value="">Estado compra</option>
             <option>Comprado</option>
             <option>Probado</option>
             <option>No comprado</option>
             <option>Descartado</option>
           </select>
-          <select id="fb-repetiria-${i}" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
+          <select id="fb-repetiria-${i}" class="text-sm border border-line rounded-md px-2.5 py-2 bg-paper text-ink">
             <option value="">Repetiría</option>
             <option>Sí</option>
             <option>No</option>
@@ -268,25 +268,25 @@ function cardHtml(c, i) {
           </select>
         </div>
 
-        <textarea id="fb-comentario-${i}" placeholder="Comentario (opcional)" class="w-full text-xs border border-line rounded-md px-2 py-1.5 mt-2 bg-paper text-ink" rows="2"></textarea>
+        <textarea id="fb-comentario-${i}" placeholder="Comentario (opcional)" class="w-full text-sm border border-line rounded-md px-2.5 py-2 mt-2 bg-paper text-ink" rows="2"></textarea>
 
         <details class="mt-2">
-          <summary class="text-xs text-inkmuted cursor-pointer select-none">Más detalle (percepción sensorial, opcional)</summary>
+          <summary class="text-sm text-inkmuted cursor-pointer select-none">Más detalle (percepción sensorial, opcional)</summary>
           <div class="grid grid-cols-2 gap-2 mt-2">
-            <input id="fb-rating-${i}" type="number" min="1" max="10" placeholder="Rating 1-10" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
+            <input id="fb-rating-${i}" type="number" min="1" max="10" placeholder="Rating 1-10" class="text-sm border border-line rounded-md px-2.5 py-2 bg-paper text-ink">
             ${['Acidez', 'Dulzor', 'Cuerpo', 'Amargor'].map(campo => `
-              <select id="fb-${campo.toLowerCase()}-${i}" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
+              <select id="fb-${campo.toLowerCase()}-${i}" class="text-sm border border-line rounded-md px-2.5 py-2 bg-paper text-ink">
                 <option value="">${campo} percibid${campo === 'Acidez' ? 'a' : 'o'}</option>
                 <option>Baja</option><option>Media-baja</option><option>Media</option><option>Media-alta</option><option>Alta</option>
               </select>`).join('')}
-            <input id="fb-tostado-${i}" type="text" placeholder="Tostado percibido" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
-            <input id="fb-espresso-${i}" type="text" placeholder="Resultado espresso" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
-            <input id="fb-leche-${i}" type="text" placeholder="Resultado con leche" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink col-span-2">
+            <input id="fb-tostado-${i}" type="text" placeholder="Tostado percibido" class="text-sm border border-line rounded-md px-2.5 py-2 bg-paper text-ink">
+            <input id="fb-espresso-${i}" type="text" placeholder="Resultado espresso" class="text-sm border border-line rounded-md px-2.5 py-2 bg-paper text-ink">
+            <input id="fb-leche-${i}" type="text" placeholder="Resultado con leche" class="text-sm border border-line rounded-md px-2.5 py-2 bg-paper text-ink col-span-2">
           </div>
         </details>
 
-        <button onclick="guardarFeedback(${i})" class="w-full text-xs font-medium bg-espresso text-paper rounded-md py-2 mt-2.5 tracking-wide">Guardar feedback</button>
-        <p id="fb-status-${i}" class="text-xs text-center mt-1.5"></p>
+        <button onclick="guardarFeedback(${i})" class="w-full text-sm font-medium bg-espresso text-paper rounded-md py-2 mt-2.5 tracking-wide">Guardar feedback</button>
+        <p id="fb-status-${i}" class="text-sm text-center mt-1.5"></p>
       </div>
     </div>
   </div>`;
@@ -343,7 +343,7 @@ async function guardarFeedback(i) {
 
   boton.disabled = true;
   statusEl.innerText = 'Guardando…';
-  statusEl.className = 'text-xs text-center mt-1.5 text-inkmuted';
+  statusEl.className = 'text-sm text-center mt-1.5 text-inkmuted';
 
   try {
     const res = await fetch(API_URL, {
@@ -355,7 +355,7 @@ async function guardarFeedback(i) {
     if (data.error) throw new Error(data.error);
 
     statusEl.innerText = data.nueva ? '✓ Guardado' : '✓ Actualizado';
-    statusEl.className = 'text-xs text-center mt-1.5 text-moss';
+    statusEl.className = 'text-sm text-center mt-1.5 text-moss';
 
     feedbackPorUrl[c.url] = Object.assign({ url: c.url }, body);
     document.getElementById('feedback-badge-' + i).innerHTML = feedbackBadgeHtml(c.url);
@@ -367,7 +367,7 @@ async function guardarFeedback(i) {
     }
   } catch (err) {
     statusEl.innerText = 'No se pudo guardar: ' + err.message;
-    statusEl.className = 'text-xs text-center mt-1.5 text-clay';
+    statusEl.className = 'text-sm text-center mt-1.5 text-clay';
   } finally {
     boton.disabled = false;
   }
@@ -387,13 +387,13 @@ async function cargarSalud() {
 
     const r = data.resumen;
     const apto = r.estadoGeneral === 'APTO PARA INTERFAZ';
-    banner.className = 'rounded-lg px-3 py-2 mb-3 flex items-center gap-2 text-xs font-mono border ' +
+    banner.className = 'rounded-lg px-3 py-2 mb-3 flex items-center gap-2 text-sm font-mono border ' +
       (apto ? 'border-mossbg bg-mossbg text-moss' : 'border-claybg bg-claybg text-clay');
     banner.innerHTML = `
       <span>${apto ? '✓' : '⚠'} ${r.estadoGeneral}</span>
       <span class="opacity-70 ml-auto">Act. ${r.actualizado}</span>`;
   } catch (err) {
-    banner.className = 'rounded-lg px-3 py-2 mb-3 text-xs font-mono border border-line bg-surface text-inkmuted';
+    banner.className = 'rounded-lg px-3 py-2 mb-3 text-sm font-mono border border-line bg-surface text-inkmuted';
     banner.innerText = 'No se pudo verificar el estado del sistema';
   }
 }
@@ -469,7 +469,7 @@ function tokensUnicos(items, field) {
 function renderOpciones(containerId, tokens, selectedSet, onChange) {
   const cont = document.getElementById(containerId);
   cont.innerHTML = tokens.map(t => `
-    <label class="flex items-center gap-2 text-sm px-1 py-1 text-ink">
+    <label class="flex items-center gap-2 text-base px-1 py-1 text-ink">
       <input type="checkbox" value="${t}" class="rounded accent-espresso"> ${t}
     </label>`).join('');
   cont.querySelectorAll('input[type=checkbox]').forEach(cb => {
@@ -551,7 +551,7 @@ function aplicarFiltros() {
 
   document.getElementById('list').innerHTML = filtrados.length
     ? filtrados.map((c, i) => cardHtml(c, i)).join('')
-    : '<p class="text-center text-sm text-inkmuted py-10 font-mono">Sin resultados con estos filtros.</p>';
+    : '<p class="text-center text-base text-inkmuted py-10 font-mono">Sin resultados con estos filtros.</p>';
 
   filtrados.forEach((c, i) => precargarFeedback(i, c.url));
 }
