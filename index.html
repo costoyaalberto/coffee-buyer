@@ -16,19 +16,19 @@
     theme: {
       extend: {
         colors: {
-          paper: '#FAF6F0',
-          surface: '#FFFFFF',
-          ink: '#241C15',
-          inkmuted: '#6B6053',
-          line: '#E8E1D6',
-          espresso: '#2E2015',
-          moss: '#45623A',
-          mossbg: '#E7EEE1',
-          ochre: '#96702A',
-          ochrebg: '#F3E9D6',
-          clay: '#A8523D',
-          claybg: '#F6E4DE',
-          declinado: '#8F8676'
+          paper: '#1B1611',
+          surface: '#241E17',
+          ink: '#F2EAD9',
+          inkmuted: '#A99C87',
+          line: '#362D22',
+          espresso: '#C9A46B',
+          moss: '#8FBB78',
+          mossbg: '#263420',
+          ochre: '#E0B15C',
+          ochrebg: '#3A2E18',
+          clay: '#E38E71',
+          claybg: '#3B2419',
+          declinado: '#8A7C67'
         },
         fontFamily: {
           display: ['Fraunces', 'serif'],
@@ -49,7 +49,7 @@
   }
   input[type=range]::-webkit-slider-runnable-track {
     height: 3px;
-    background: #E8E1D6;
+    background: #362D22;
     border-radius: 2px;
   }
   input[type=range]::-webkit-slider-thumb {
@@ -58,9 +58,9 @@
     height: 15px;
     margin-top: -6px;
     border-radius: 50%;
-    background: #2E2015;
-    border: 2px solid #FAF6F0;
-    box-shadow: 0 0 0 1px #2E2015;
+    background: #C9A46B;
+    border: 2px solid #1B1611;
+    box-shadow: 0 0 0 1px #C9A46B;
   }
 </style>
 </head>
@@ -68,7 +68,7 @@
 
   <!-- ====== CONFIGURACIÓN: pegar acá la URL /exec del deploy ====== -->
   <script>
-    const API_URL = 'PEGAR_AQUI_LA_URL_DEL_DEPLOY_EXEC';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbycrx7cxNJlfsXbJNYfWOcWKUxhzLRXhvS6Ndv0zw3L3DEjZUFrIkSpZIZTOj8vkdBq/exec';
   </script>
 
   <div class="max-w-md mx-auto px-3 pt-4 pb-24">
@@ -153,10 +153,10 @@ function fmtScore(v) {
 
 // Color de referencia por nivel de confianza — usado en la barra de gauge.
 function colorConfianza(score) {
-  if (score === null) return '#C9C1B4';
-  if (score >= 80) return '#45623A';
-  if (score >= 50) return '#96702A';
-  return '#A8523D';
+  if (score === null) return '#5A4F3E';
+  if (score >= 80) return '#8FBB78';
+  if (score >= 50) return '#E0B15C';
+  return '#E38E71';
 }
 
 // El borde izquierdo de la tarjeta funciona como código de color de muestra:
@@ -201,48 +201,50 @@ function tiendaInfoHtml(nombreTienda) {
 function cardHtml(c, i) {
   const meta = [c.tienda, c.origen, c.proceso, c.variedad].filter(Boolean).join(' · ');
   const numRanking = c.rankingFinal !== undefined && c.rankingFinal !== null && c.rankingFinal !== ''
-    ? String(c.rankingFinal).padStart(2, '0') : '—';
+    ? String(c.rankingFinal) : '—';
   const scoreConf = parseNum(c.scoreConfianza);
   const pctConf = scoreConf === null ? 0 : Math.max(0, Math.min(100, scoreConf));
 
   return `
-  <div class="bg-surface border border-line ${stripeClass(c.url)} border-l-[3px] rounded-xl p-3.5">
-    <div class="flex items-start gap-3">
-      <div class="shrink-0 pt-0.5">
-        <span class="font-mono text-[11px] text-espresso tracking-wide">No.${numRanking}</span>
-      </div>
+  <div class="relative overflow-hidden bg-surface border border-line ${stripeClass(c.url)} border-l-4 rounded-2xl p-4">
+    <span class="absolute -top-4 -right-1 font-display font-bold text-[84px] leading-none text-ink opacity-[0.05] pointer-events-none select-none">${numRanking}</span>
+
+    <div class="relative z-10 flex items-start gap-3">
+      <div class="w-8 h-8 rounded-full bg-paper border border-line flex items-center justify-center text-xs font-mono text-espresso shrink-0">${numRanking}</div>
       <div class="flex-1 min-w-0">
-        <p class="font-display font-semibold text-[17px] leading-snug text-ink">${c.cafe || 'Sin nombre'}</p>
+        <p class="font-display font-semibold text-[19px] leading-snug text-ink">${c.cafe || 'Sin nombre'}</p>
         <p class="text-xs text-inkmuted mt-0.5">${meta}</p>
         <span id="feedback-badge-${i}">${feedbackBadgeHtml(c.url)}</span>
       </div>
     </div>
 
-    ${c.notasCorregidas ? `<p class="text-[13px] text-inkmuted italic mt-2 font-display">☕ ${c.notasCorregidas}</p>` : ''}
+    ${c.notasCorregidas ? `<p class="relative z-10 text-[13px] text-inkmuted italic mt-2.5 font-display">☕ ${c.notasCorregidas}</p>` : ''}
 
-    <div class="flex items-center gap-3 mt-2.5 text-[11px] font-mono text-inkmuted uppercase tracking-wide">
+    <div class="relative z-10 flex items-center gap-3 mt-2.5 text-[11px] font-mono text-inkmuted uppercase tracking-wide">
       ${c.altura ? `<span>${c.altura} msnm</span>` : ''}
       ${c.scoreMetadata !== '' && c.scoreMetadata !== undefined ? `<span>Datos ${fmtScore(c.scoreMetadata)}% completos</span>` : ''}
     </div>
 
-    <div class="flex items-center justify-between mt-3">
+    <div class="relative z-10 h-px bg-line my-3"></div>
+
+    <div class="relative z-10 flex items-center justify-between">
       <div class="flex items-baseline gap-1">
-        <span class="font-display font-semibold text-xl text-ink">$${fmtPrecio(c.precioKg)}</span>
+        <span class="font-display font-bold text-2xl text-ink">$${fmtPrecio(c.precioKg)}</span>
         <span class="text-xs text-inkmuted">/kg</span>
       </div>
-      <div class="flex items-center gap-2">
-        <div class="flex flex-col items-end gap-0.5">
-          <span class="text-[10px] font-mono text-inkmuted">CONF ${fmtScore(c.scoreConfianza)}</span>
-          <div class="w-14 h-1 rounded-full bg-line overflow-hidden">
+      <div class="flex items-center gap-2.5">
+        <div class="flex flex-col items-end gap-1">
+          <span class="text-[9px] font-mono text-inkmuted tracking-wide">CONF ${fmtScore(c.scoreConfianza)}</span>
+          <div class="w-16 h-[5px] rounded-full bg-line overflow-hidden">
             <div class="h-full rounded-full" style="width:${pctConf}%; background:${colorConfianza(scoreConf)}"></div>
           </div>
         </div>
-        ${c.url ? `<a href="${c.url}" target="_blank" rel="noopener" class="w-8 h-8 flex items-center justify-center rounded-lg border border-line text-espresso">↗</a>` : ''}
-        <button onclick="toggleDetail(${i})" class="w-8 h-8 flex items-center justify-center rounded-lg border border-line text-espresso">⌄</button>
+        ${c.url ? `<a href="${c.url}" target="_blank" rel="noopener" class="w-[34px] h-[34px] flex items-center justify-center rounded-lg bg-paper border border-line text-ink">↗</a>` : ''}
+        <button onclick="toggleDetail(${i})" class="w-[34px] h-[34px] flex items-center justify-center rounded-lg bg-paper border border-line text-ink">⌄</button>
       </div>
     </div>
 
-    <div id="detail-${i}" class="hidden mt-3 pt-3 border-t border-line text-xs text-inkmuted space-y-1.5">
+    <div id="detail-${i}" class="relative z-10 hidden mt-3 pt-3 border-t border-line text-xs text-inkmuted space-y-1.5">
       ${c.riesgoNotas ? `<p class="text-clay">⚠️ ${c.riesgoNotas}</p>` : ''}
       ${c.datosFaltantes ? `<p>Datos faltantes: ${c.datosFaltantes}</p>` : ''}
       ${tiendaInfoHtml(c.tienda)}
@@ -341,7 +343,7 @@ async function guardarFeedback(i) {
     feedbackPorUrl[c.url] = { url: c.url, estadoCompra: body.estadoCompra, repetiria: body.repetiria, ratingPersonal: body.ratingPersonal };
     document.getElementById('feedback-badge-' + i).innerHTML = feedbackBadgeHtml(c.url);
 
-    const card = document.getElementById('feedback-badge-' + i).closest('.border-l-\\[3px\\]');
+    const card = document.getElementById('feedback-badge-' + i).closest('.border-l-4');
     if (card) {
       card.classList.remove('border-line', 'border-moss', 'border-ochre', 'border-declinado', 'border-inkmuted');
       card.classList.add(stripeClass(c.url).replace('border-', 'border-'));
