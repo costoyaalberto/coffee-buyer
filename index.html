@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Coffee Buyer AI</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#1B1611">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          paper: '#FAF6F0',
+          surface: '#FFFFFF',
+          ink: '#241C15',
+          inkmuted: '#6B6053',
+          line: '#E8E1D6',
+          espresso: '#2E2015',
+          moss: '#45623A',
+          mossbg: '#E7EEE1',
+          ochre: '#96702A',
+          ochrebg: '#F3E9D6',
+          clay: '#A8523D',
+          claybg: '#F6E4DE',
+          declinado: '#8F8676'
+        },
+        fontFamily: {
+          display: ['Fraunces', 'serif'],
+          sans: ['"IBM Plex Sans"', 'sans-serif'],
+          mono: ['"IBM Plex Mono"', 'monospace']
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body { -webkit-tap-highlight-color: transparent; }
+  ::-webkit-scrollbar { display: none; }
+  summary::-webkit-details-marker { display: none; }
+  input[type=range] {
+    -webkit-appearance: none;
+    background: transparent;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 3px;
+    background: #E8E1D6;
+    border-radius: 2px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    margin-top: -6px;
+    border-radius: 50%;
+    background: #2E2015;
+    border: 2px solid #FAF6F0;
+    box-shadow: 0 0 0 1px #2E2015;
+  }
+</style>
+</head>
+<body class="bg-paper text-ink font-sans min-h-screen">
+
+  <!-- ====== CONFIGURACIÓN: pegar acá la URL /exec del deploy ====== -->
+  <script>
+    const API_URL = 'PEGAR_AQUI_LA_URL_DEL_DEPLOY_EXEC';
+  </script>
+
+  <div class="max-w-md mx-auto px-3 pt-4 pb-24">
+
+    <div class="flex items-baseline justify-between mb-3 px-0.5">
+      <h1 class="font-display font-semibold text-lg tracking-tight">Coffee Buyer</h1>
+      <span class="font-mono text-[10px] text-inkmuted tracking-widest uppercase">V4</span>
+    </div>
+
+    <!-- Banner de salud -->
+    <div id="healthBanner" class="rounded-lg px-3 py-2 mb-3 flex items-center gap-2 text-xs font-mono border border-line bg-surface text-inkmuted">
+      <span>Cargando estado del sistema…</span>
+    </div>
+
+    <!-- Filtros -->
+    <div id="filtros" class="bg-surface border border-line rounded-xl p-3 mb-3 hidden">
+      <div class="grid grid-cols-2 gap-2">
+        <details id="origenPanel" class="relative">
+          <summary class="list-none cursor-pointer text-sm px-3 py-2 rounded-lg border border-line flex items-center justify-between text-ink">
+            <span id="origenLabel">Origen</span><span class="text-inkmuted text-xs">▾</span>
+          </summary>
+          <div class="absolute z-10 mt-1 w-56 bg-surface border border-line rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto">
+            <input id="origenBuscar" type="text" placeholder="Buscar país…" class="w-full text-sm border border-line rounded-md px-2 py-1 mb-2 bg-paper">
+            <div id="origenOpciones" class="flex flex-col gap-1"></div>
+          </div>
+        </details>
+
+        <details id="procesoPanel" class="relative">
+          <summary class="list-none cursor-pointer text-sm px-3 py-2 rounded-lg border border-line flex items-center justify-between text-ink">
+            <span id="procesoLabel">Proceso</span><span class="text-inkmuted text-xs">▾</span>
+          </summary>
+          <div class="absolute z-10 mt-1 w-56 bg-surface border border-line rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto">
+            <div id="procesoOpciones" class="flex flex-col gap-1"></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="mt-3">
+        <div class="flex items-center justify-between text-xs font-mono text-inkmuted mb-1">
+          <span class="uppercase tracking-wide">Precio/kg</span>
+          <span id="precioLabel"></span>
+        </div>
+        <input id="precioMin" type="range" class="w-full">
+        <input id="precioMax" type="range" class="w-full -mt-1">
+      </div>
+
+      <div class="flex items-center justify-between mt-2">
+        <span id="resultCount" class="text-xs font-mono text-inkmuted"></span>
+        <button id="limpiarFiltros" class="text-xs text-inkmuted underline">Limpiar filtros</button>
+      </div>
+    </div>
+
+    <!-- Estado de carga / error -->
+    <div id="loadingState" class="text-center text-sm text-inkmuted py-10 font-mono">
+      Cargando recomendaciones…
+    </div>
+    <div id="errorState" class="hidden text-center text-sm text-clay py-10 px-4"></div>
+
+    <!-- Listado -->
+    <div id="list" class="flex flex-col gap-2.5"></div>
+
+  </div>
+
+<script>
+
+function parseNum(v) {
+  if (v === '' || v === null || v === undefined) return null;
+  if (typeof v === 'number') return v;
+  const n = parseFloat(String(v).replace(/\./g, '').replace(',', '.'));
+  return isNaN(n) ? null : n;
+}
+
+function fmtPrecio(v) {
+  const n = parseNum(v);
+  return n === null ? '—' : new Intl.NumberFormat('es-CL').format(Math.round(n));
+}
+
+function fmtScore(v) {
+  const n = parseNum(v);
+  return n === null ? '—' : Math.round(n);
+}
+
+// Color de referencia por nivel de confianza — usado en la barra de gauge.
+function colorConfianza(score) {
+  if (score === null) return '#C9C1B4';
+  if (score >= 80) return '#45623A';
+  if (score >= 50) return '#96702A';
+  return '#A8523D';
+}
+
+// El borde izquierdo de la tarjeta funciona como código de color de muestra:
+// se ve de reojo sin necesidad de leer texto, para el caso de uso "en la calle".
+function stripeClass(url) {
+  const f = feedbackPorUrl[url];
+  if (!f || !f.estadoCompra) return 'border-line';
+  if (f.repetiria === 'Sí') return 'border-moss';
+  if (f.repetiria === 'Tal vez') return 'border-ochre';
+  if (f.repetiria === 'No') return 'border-declinado';
+  return 'border-inkmuted';
+}
+
+function feedbackBadgeHtml(url) {
+  const f = feedbackPorUrl[url];
+  if (!f || !f.estadoCompra) return '';
+
+  const estilo = {
+    'Sí': 'bg-mossbg text-moss',
+    'Tal vez': 'bg-ochrebg text-ochre',
+    'No': 'bg-paper text-declinado'
+  }[f.repetiria] || 'bg-paper text-inkmuted';
+
+  const texto = f.estadoCompra + (f.repetiria ? ' · Repetiría: ' + f.repetiria : '');
+  return `<span class="inline-block text-[11px] font-medium px-2 py-0.5 rounded mt-1.5 tracking-wide ${estilo}">✓ ${texto}</span>`;
+}
+
+function tiendaInfoHtml(nombreTienda) {
+  const t = tiendasPorNombre[String(nombreTienda || '').trim()];
+  if (!t) return '';
+
+  if (t.tipoTienda && t.tipoTienda.toLowerCase() === 'virtual') {
+    return `<p class="text-inkmuted">🌐 Solo venta online</p>`;
+  }
+
+  const partes = [t.direccion, t.comuna].filter(Boolean).join(', ');
+  if (!partes && !t.notasUbicacion) return '';
+
+  return `<p class="text-inkmuted">📍 ${partes}${t.notasUbicacion ? ' (' + t.notasUbicacion + ')' : ''}</p>`;
+}
+
+function cardHtml(c, i) {
+  const meta = [c.tienda, c.origen, c.proceso, c.variedad].filter(Boolean).join(' · ');
+  const numRanking = c.rankingFinal !== undefined && c.rankingFinal !== null && c.rankingFinal !== ''
+    ? String(c.rankingFinal).padStart(2, '0') : '—';
+  const scoreConf = parseNum(c.scoreConfianza);
+  const pctConf = scoreConf === null ? 0 : Math.max(0, Math.min(100, scoreConf));
+
+  return `
+  <div class="bg-surface border border-line ${stripeClass(c.url)} border-l-[3px] rounded-xl p-3.5">
+    <div class="flex items-start gap-3">
+      <div class="shrink-0 pt-0.5">
+        <span class="font-mono text-[11px] text-espresso tracking-wide">No.${numRanking}</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-display font-semibold text-[17px] leading-snug text-ink">${c.cafe || 'Sin nombre'}</p>
+        <p class="text-xs text-inkmuted mt-0.5">${meta}</p>
+        <span id="feedback-badge-${i}">${feedbackBadgeHtml(c.url)}</span>
+      </div>
+    </div>
+
+    ${c.notasCorregidas ? `<p class="text-[13px] text-inkmuted italic mt-2 font-display">☕ ${c.notasCorregidas}</p>` : ''}
+
+    <div class="flex items-center gap-3 mt-2.5 text-[11px] font-mono text-inkmuted uppercase tracking-wide">
+      ${c.altura ? `<span>${c.altura} msnm</span>` : ''}
+      ${c.scoreMetadata !== '' && c.scoreMetadata !== undefined ? `<span>Datos ${fmtScore(c.scoreMetadata)}% completos</span>` : ''}
+    </div>
+
+    <div class="flex items-center justify-between mt-3">
+      <div class="flex items-baseline gap-1">
+        <span class="font-display font-semibold text-xl text-ink">$${fmtPrecio(c.precioKg)}</span>
+        <span class="text-xs text-inkmuted">/kg</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="flex flex-col items-end gap-0.5">
+          <span class="text-[10px] font-mono text-inkmuted">CONF ${fmtScore(c.scoreConfianza)}</span>
+          <div class="w-14 h-1 rounded-full bg-line overflow-hidden">
+            <div class="h-full rounded-full" style="width:${pctConf}%; background:${colorConfianza(scoreConf)}"></div>
+          </div>
+        </div>
+        ${c.url ? `<a href="${c.url}" target="_blank" rel="noopener" class="w-8 h-8 flex items-center justify-center rounded-lg border border-line text-espresso">↗</a>` : ''}
+        <button onclick="toggleDetail(${i})" class="w-8 h-8 flex items-center justify-center rounded-lg border border-line text-espresso">⌄</button>
+      </div>
+    </div>
+
+    <div id="detail-${i}" class="hidden mt-3 pt-3 border-t border-line text-xs text-inkmuted space-y-1.5">
+      ${c.riesgoNotas ? `<p class="text-clay">⚠️ ${c.riesgoNotas}</p>` : ''}
+      ${c.datosFaltantes ? `<p>Datos faltantes: ${c.datosFaltantes}</p>` : ''}
+      ${tiendaInfoHtml(c.tienda)}
+
+      <div class="pt-3 mt-2 border-t border-line">
+        <p class="text-xs font-semibold text-ink mb-2 font-display tracking-wide">Tu experiencia</p>
+
+        <div class="grid grid-cols-2 gap-2">
+          <select id="fb-estado-${i}" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
+            <option value="">Estado compra</option>
+            <option>Comprado</option>
+            <option>Probado</option>
+            <option>No comprado</option>
+            <option>Descartado</option>
+          </select>
+          <select id="fb-repetiria-${i}" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
+            <option value="">Repetiría</option>
+            <option>Sí</option>
+            <option>No</option>
+            <option>Tal vez</option>
+          </select>
+        </div>
+
+        <textarea id="fb-comentario-${i}" placeholder="Comentario (opcional)" class="w-full text-xs border border-line rounded-md px-2 py-1.5 mt-2 bg-paper text-ink" rows="2"></textarea>
+
+        <details class="mt-2">
+          <summary class="text-xs text-inkmuted cursor-pointer select-none">Más detalle (percepción sensorial, opcional)</summary>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            <input id="fb-rating-${i}" type="number" min="1" max="10" placeholder="Rating 1-10" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
+            ${['Acidez', 'Dulzor', 'Cuerpo', 'Amargor'].map(campo => `
+              <select id="fb-${campo.toLowerCase()}-${i}" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
+                <option value="">${campo} percibid${campo === 'Acidez' ? 'a' : 'o'}</option>
+                <option>Baja</option><option>Media-baja</option><option>Media</option><option>Media-alta</option><option>Alta</option>
+              </select>`).join('')}
+            <input id="fb-tostado-${i}" type="text" placeholder="Tostado percibido" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
+            <input id="fb-espresso-${i}" type="text" placeholder="Resultado espresso" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink">
+            <input id="fb-leche-${i}" type="text" placeholder="Resultado con leche" class="text-xs border border-line rounded-md px-2 py-1.5 bg-paper text-ink col-span-2">
+          </div>
+        </details>
+
+        <button onclick="guardarFeedback(${i})" class="w-full text-xs font-medium bg-espresso text-paper rounded-md py-2 mt-2.5 tracking-wide">Guardar feedback</button>
+        <p id="fb-status-${i}" class="text-xs text-center mt-1.5"></p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleDetail(i) {
+  const el = document.getElementById('detail-' + i);
+  el.classList.toggle('hidden');
+}
+
+const FEEDBACK_TOKEN = 'CoffeBuyerBeto';
+
+async function guardarFeedback(i) {
+  const c = filtradosActuales[i];
+  const statusEl = document.getElementById('fb-status-' + i);
+  const boton = document.querySelector(`#detail-${i} button`);
+
+  const body = {
+    token: FEEDBACK_TOKEN,
+    // contexto del café al momento del feedback
+    tienda: c.tienda, cafe: c.cafe, url: c.url, precioKg: c.precioKg,
+    rankingFinal: c.rankingFinal, accionFinal: c.accionFinal,
+    scoreConfianza: c.scoreConfianza, indiceBenchmark: c.indiceBenchmark, matchAjustado: c.matchAjustado,
+    // formulario
+    estadoCompra: val('fb-estado-' + i),
+    repetiria: val('fb-repetiria-' + i),
+    comentario: val('fb-comentario-' + i),
+    ratingPersonal: val('fb-rating-' + i),
+    acidezPercibida: val('fb-acidez-' + i),
+    dulzorPercibido: val('fb-dulzor-' + i),
+    cuerpoPercibido: val('fb-cuerpo-' + i),
+    amargorPercibido: val('fb-amargor-' + i),
+    tostadoPercibido: val('fb-tostado-' + i),
+    resultadoEspresso: val('fb-espresso-' + i),
+    resultadoConLeche: val('fb-leche-' + i)
+  };
+
+  boton.disabled = true;
+  statusEl.innerText = 'Guardando…';
+  statusEl.className = 'text-xs text-center mt-1.5 text-inkmuted';
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita preflight CORS
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    statusEl.innerText = data.nueva ? '✓ Guardado' : '✓ Actualizado';
+    statusEl.className = 'text-xs text-center mt-1.5 text-moss';
+
+    feedbackPorUrl[c.url] = { url: c.url, estadoCompra: body.estadoCompra, repetiria: body.repetiria, ratingPersonal: body.ratingPersonal };
+    document.getElementById('feedback-badge-' + i).innerHTML = feedbackBadgeHtml(c.url);
+
+    const card = document.getElementById('feedback-badge-' + i).closest('.border-l-\\[3px\\]');
+    if (card) {
+      card.classList.remove('border-line', 'border-moss', 'border-ochre', 'border-declinado', 'border-inkmuted');
+      card.classList.add(stripeClass(c.url).replace('border-', 'border-'));
+    }
+  } catch (err) {
+    statusEl.innerText = 'No se pudo guardar: ' + err.message;
+    statusEl.className = 'text-xs text-center mt-1.5 text-clay';
+  } finally {
+    boton.disabled = false;
+  }
+}
+
+function val(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
+}
+
+async function cargarSalud() {
+  const banner = document.getElementById('healthBanner');
+  try {
+    const res = await fetch(API_URL + '?action=salud');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    const r = data.resumen;
+    const apto = r.estadoGeneral === 'APTO PARA INTERFAZ';
+    banner.className = 'rounded-lg px-3 py-2 mb-3 flex items-center gap-2 text-xs font-mono border ' +
+      (apto ? 'border-mossbg bg-mossbg text-moss' : 'border-claybg bg-claybg text-clay');
+    banner.innerHTML = `
+      <span>${apto ? '✓' : '⚠'} ${r.estadoGeneral}</span>
+      <span class="opacity-70 ml-auto">Act. ${r.actualizado}</span>`;
+  } catch (err) {
+    banner.className = 'rounded-lg px-3 py-2 mb-3 text-xs font-mono border border-line bg-surface text-inkmuted';
+    banner.innerText = 'No se pudo verificar el estado del sistema';
+  }
+}
+
+let feedbackPorUrl = {};
+
+async function cargarFeedbackPropio() {
+  try {
+    const res = await fetch(API_URL + '?action=feedback');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    data.items.forEach(f => { if (f.url) feedbackPorUrl[f.url] = f; });
+  } catch (err) {
+    // Si falla, simplemente no se muestra el badge de feedback previo — no bloquea el resto.
+  }
+}
+
+let tiendasPorNombre = {};
+
+async function cargarTiendas() {
+  try {
+    const res = await fetch(API_URL + '?action=tiendas');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    data.items.forEach(t => { if (t.tienda) tiendasPorNombre[t.tienda.trim()] = t; });
+  } catch (err) {
+    // Si falla, el detalle simplemente no muestra dirección — no bloquea el resto de la app.
+  }
+}
+
+async function cargarRecomendaciones() {
+  const loading = document.getElementById('loadingState');
+  const errorEl = document.getElementById('errorState');
+  const list = document.getElementById('list');
+
+  try {
+    const res = await fetch(API_URL + '?action=recomendaciones');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    loading.classList.add('hidden');
+    todosLosCafes = data.items;
+    initFiltros(todosLosCafes);
+    document.getElementById('filtros').classList.remove('hidden');
+    aplicarFiltros();
+  } catch (err) {
+    loading.classList.add('hidden');
+    errorEl.classList.remove('hidden');
+    errorEl.innerText = 'No se pudo cargar el listado. Revisá tu conexión o volvé a intentar. (' + err.message + ')';
+  }
+}
+
+// ============================================================
+// FILTROS
+// ============================================================
+
+let todosLosCafes = [];
+let filtradosActuales = [];
+const filtroState = { origenes: new Set(), procesos: new Set(), precioMin: null, precioMax: null };
+
+// Los campos "Origen" y "Proceso" a veces traen varios valores en un mismo
+// texto (ej: "Natural, Lavado"). Se separan en tokens únicos para armar las
+// opciones del checkbox, pero el filtrado siempre es por texto contenido
+// (coincidencia parcial ANY), no por igualdad exacta.
+function tokensUnicos(items, field) {
+  const set = new Set();
+  items.forEach(it => {
+    String(it[field] || '').split(',').map(s => s.trim()).filter(Boolean).forEach(t => set.add(t));
+  });
+  return [...set].sort((a, b) => a.localeCompare(b, 'es'));
+}
+
+function renderOpciones(containerId, tokens, selectedSet, onChange) {
+  const cont = document.getElementById(containerId);
+  cont.innerHTML = tokens.map(t => `
+    <label class="flex items-center gap-2 text-sm px-1 py-1 text-ink">
+      <input type="checkbox" value="${t}" class="rounded accent-espresso"> ${t}
+    </label>`).join('');
+  cont.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      if (cb.checked) selectedSet.add(cb.value); else selectedSet.delete(cb.value);
+      onChange();
+    });
+  });
+}
+
+function initFiltros(items) {
+  const origenes = tokensUnicos(items, 'origen');
+  const procesos = tokensUnicos(items, 'proceso');
+  renderOpciones('origenOpciones', origenes, filtroState.origenes, aplicarFiltros);
+  renderOpciones('procesoOpciones', procesos, filtroState.procesos, aplicarFiltros);
+
+  document.getElementById('origenBuscar').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('#origenOpciones label').forEach(l => {
+      l.style.display = l.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+
+  const precios = items.map(c => parseNum(c.precioKg)).filter(v => v !== null);
+  const min = Math.floor(Math.min(...precios) / 1000) * 1000;
+  const max = Math.ceil(Math.max(...precios) / 1000) * 1000;
+  const precioMin = document.getElementById('precioMin');
+  const precioMax = document.getElementById('precioMax');
+  [precioMin, precioMax].forEach(el => { el.min = min; el.max = max; el.step = 1000; });
+  precioMin.value = min;
+  precioMax.value = max;
+  filtroState.precioMin = min;
+  filtroState.precioMax = max;
+
+  function onPrecioChange() {
+    let mn = parseInt(precioMin.value), mx = parseInt(precioMax.value);
+    if (mn > mx) { [mn, mx] = [mx, mn]; }
+    filtroState.precioMin = mn;
+    filtroState.precioMax = mx;
+    document.getElementById('precioLabel').innerText =
+      '$' + new Intl.NumberFormat('es-CL').format(mn) + ' – $' + new Intl.NumberFormat('es-CL').format(mx);
+    aplicarFiltros();
+  }
+  precioMin.addEventListener('input', onPrecioChange);
+  precioMax.addEventListener('input', onPrecioChange);
+  onPrecioChange();
+
+  document.getElementById('limpiarFiltros').addEventListener('click', () => {
+    filtroState.origenes.clear();
+    filtroState.procesos.clear();
+    document.querySelectorAll('#filtros input[type=checkbox]').forEach(cb => cb.checked = false);
+    precioMin.value = min; precioMax.value = max;
+    onPrecioChange();
+  });
+}
+
+function contieneAlguno(valorCampo, seleccionados) {
+  if (seleccionados.size === 0) return true;
+  const texto = String(valorCampo || '').toLowerCase();
+  return [...seleccionados].some(sel => texto.includes(sel.toLowerCase()));
+}
+
+function aplicarFiltros() {
+  const { origenes, procesos, precioMin, precioMax } = filtroState;
+
+  const filtrados = todosLosCafes.filter(c => {
+    if (!contieneAlguno(c.origen, origenes)) return false;
+    if (!contieneAlguno(c.proceso, procesos)) return false;
+    const precio = parseNum(c.precioKg);
+    if (precio !== null && (precio < precioMin || precio > precioMax)) return false;
+    return true;
+  });
+
+  filtradosActuales = filtrados;
+
+  document.getElementById('origenLabel').innerText = origenes.size ? `Origen (${origenes.size})` : 'Origen';
+  document.getElementById('procesoLabel').innerText = procesos.size ? `Proceso (${procesos.size})` : 'Proceso';
+  document.getElementById('resultCount').innerText = `${filtrados.length} de ${todosLosCafes.length} cafés`;
+
+  document.getElementById('list').innerHTML = filtrados.length
+    ? filtrados.map((c, i) => cardHtml(c, i)).join('')
+    : '<p class="text-center text-sm text-inkmuted py-10 font-mono">Sin resultados con estos filtros.</p>';
+}
+
+async function init() {
+  cargarSalud(); // no bloquea el resto, es independiente
+  await Promise.all([cargarTiendas(), cargarFeedbackPropio()]);
+  await cargarRecomendaciones();
+}
+init();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(() => {
+      // Si falla el registro, la app sigue funcionando normal, solo sin caché offline.
+    });
+  });
+}
+</script>
+</body>
+</html>
