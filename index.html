@@ -386,6 +386,14 @@ async function guardarFeedback(i) {
     feedbackPorUrl[c.url] = Object.assign({ url: c.url }, body);
     document.getElementById('feedback-badge-' + i).innerHTML = feedbackBadgeHtml(c.url);
 
+    if (body.estadoCompra === 'Descartado') {
+      statusEl.innerText = '✓ Descartado — sacando de la lista…';
+      setTimeout(() => {
+        todosLosCafes = todosLosCafes.filter(x => x.url !== c.url);
+        aplicarFiltros();
+      }, 900);
+    }
+
     const card = document.getElementById('feedback-badge-' + i).closest('.border-l-4');
     if (card) {
       card.classList.remove('border-line', 'border-moss', 'border-ochre', 'border-declinado', 'border-inkmuted');
