@@ -78,6 +78,12 @@
       <span class="font-mono text-sm text-inkmuted tracking-widest uppercase">V4</span>
     </div>
 
+    <div class="flex gap-2 mb-3">
+      <button id="tabCafes" onclick="cambiarVista('cafes')" class="flex-1 text-sm font-medium py-2 rounded-lg border border-line bg-espresso text-paper">Cafés</button>
+      <button id="tabTiendas" onclick="cambiarVista('tiendas')" class="flex-1 text-sm font-medium py-2 rounded-lg border border-line bg-surface text-inkmuted">Tiendas</button>
+    </div>
+
+    <div id="viewCafes">
     <!-- Banner de salud -->
     <div id="healthBanner" class="rounded-lg px-3 py-2 mb-3 flex items-center gap-2 text-sm font-mono border border-line bg-surface text-inkmuted">
       <span>Cargando estado del sistema…</span>
@@ -90,7 +96,7 @@
           <summary class="list-none cursor-pointer text-base px-3 py-2 rounded-lg border border-line flex items-center justify-between text-ink">
             <span id="origenLabel">Origen</span><span class="text-inkmuted text-sm">▾</span>
           </summary>
-          <div class="absolute z-10 mt-1 w-56 bg-surface border border-line rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto">
+          <div class="absolute z-30 mt-1 w-56 bg-surface border border-line rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto">
             <input id="origenBuscar" type="text" placeholder="Buscar país…" class="w-full text-base border border-line rounded-md px-2 py-1 mb-2 bg-paper">
             <div id="origenOpciones" class="flex flex-col gap-1"></div>
           </div>
@@ -100,7 +106,7 @@
           <summary class="list-none cursor-pointer text-base px-3 py-2 rounded-lg border border-line flex items-center justify-between text-ink">
             <span id="procesoLabel">Proceso</span><span class="text-inkmuted text-sm">▾</span>
           </summary>
-          <div class="absolute z-10 mt-1 w-56 bg-surface border border-line rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto">
+          <div class="absolute z-30 mt-1 w-56 bg-surface border border-line rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto">
             <div id="procesoOpciones" class="flex flex-col gap-1"></div>
           </div>
         </details>
@@ -129,6 +135,14 @@
 
     <!-- Listado -->
     <div id="list" class="flex flex-col gap-2.5"></div>
+
+    </div>
+    <!-- fin viewCafes -->
+
+    <div id="viewTiendas" class="hidden">
+      <div id="tiendasFisicas" class="flex flex-col gap-2.5 mb-5"></div>
+      <div id="tiendasVirtuales"></div>
+    </div>
 
   </div>
 
@@ -168,6 +182,16 @@ function stripeClass(url) {
   if (f.repetiria === 'Tal vez') return 'border-ochre';
   if (f.repetiria === 'No') return 'border-declinado';
   return 'border-inkmuted';
+}
+
+function disponibilidadBadgeHtml(disp) {
+  if (!disp || disp === 'Sin dato') return '';
+  const estilo = {
+    'Disponible': 'bg-mossbg text-moss',
+    'Agotado': 'bg-claybg text-clay',
+    'Revisar': 'bg-ochrebg text-ochre'
+  }[disp] || 'bg-paper text-inkmuted';
+  return `<span class="inline-block text-sm font-medium px-2.5 py-1 rounded ${estilo}">${disp}</span>`;
 }
 
 function feedbackBadgeHtml(url) {
@@ -220,9 +244,10 @@ function cardHtml(c, i) {
 
     ${c.notasCorregidas ? `<p class="relative z-10 text-base text-inkmuted italic mt-2.5 font-display">☕ ${c.notasCorregidas}</p>` : ''}
 
-    <div class="relative z-10 flex items-center gap-3 mt-2.5 text-sm font-mono text-inkmuted uppercase tracking-wide">
-      ${c.altura ? `<span>${c.altura} msnm</span>` : ''}
-      ${c.scoreMetadata !== '' && c.scoreMetadata !== undefined ? `<span>Datos ${fmtScore(c.scoreMetadata)}% completos</span>` : ''}
+    <div class="relative z-10 flex items-center gap-2 mt-2.5 flex-wrap">
+      ${disponibilidadBadgeHtml(c.disponibilidad)}
+      <span class="text-sm font-mono text-inkmuted uppercase tracking-wide">${c.altura ? c.altura + ' msnm' : ''}</span>
+      ${c.scoreMetadata !== '' && c.scoreMetadata !== undefined ? `<span class="text-sm font-mono text-inkmuted uppercase tracking-wide">Datos ${fmtScore(c.scoreMetadata)}% completos</span>` : ''}
     </div>
 
     <div class="relative z-10 h-px bg-line my-3"></div>
@@ -556,9 +581,44 @@ function aplicarFiltros() {
   filtrados.forEach((c, i) => precargarFeedback(i, c.url));
 }
 
+function cambiarVista(vista) {
+  const esCafes = vista === 'cafes';
+  document.getElementById('viewCafes').classList.toggle('hidden', !esCafes);
+  document.getElementById('viewTiendas').classList.toggle('hidden', esCafes);
+  document.getElementById('tabCafes').className = 'flex-1 text-sm font-medium py-2 rounded-lg border border-line ' + (esCafes ? 'bg-espresso text-paper' : 'bg-surface text-inkmuted');
+  document.getElementById('tabTiendas').className = 'flex-1 text-sm font-medium py-2 rounded-lg border border-line ' + (!esCafes ? 'bg-espresso text-paper' : 'bg-surface text-inkmuted');
+}
+
+function renderTiendas() {
+  const todas = Object.values(tiendasPorNombre);
+  const fisicas = todas
+    .filter(t => t.tipoTienda && t.tipoTienda.toLowerCase() !== 'virtual')
+    .sort((a, b) => (a.comuna || '').localeCompare(b.comuna || '', 'es') || a.tienda.localeCompare(b.tienda, 'es'));
+  const virtuales = todas
+    .filter(t => !t.tipoTienda || t.tipoTienda.toLowerCase() === 'virtual')
+    .sort((a, b) => a.tienda.localeCompare(b.tienda, 'es'));
+
+  document.getElementById('tiendasFisicas').innerHTML =
+    `<p class="text-sm font-mono text-inkmuted uppercase tracking-wide mb-2">Físicas</p>` +
+    (fisicas.length ? fisicas.map(t => `
+      <div class="bg-surface border border-line rounded-xl p-3.5">
+        <p class="font-display font-semibold text-lg text-ink">${t.tienda}</p>
+        <p class="text-sm text-inkmuted mt-0.5">${[t.direccion, t.comuna].filter(Boolean).join(', ') || 'Sin dirección registrada'}</p>
+        ${t.notasUbicacion ? `<p class="text-sm text-inkmuted mt-1">${t.notasUbicacion}</p>` : ''}
+      </div>`).join('')
+      : `<p class="text-sm text-inkmuted">No hay tiendas físicas registradas.</p>`);
+
+  document.getElementById('tiendasVirtuales').innerHTML =
+    `<p class="text-sm font-mono text-inkmuted uppercase tracking-wide mb-2">Virtuales</p>
+     <div class="bg-surface border border-line rounded-xl p-3.5 flex flex-wrap gap-2">
+       ${virtuales.map(t => `<span class="text-sm px-2.5 py-1 rounded-md bg-paper border border-line text-ink">🌐 ${t.tienda}</span>`).join('')}
+     </div>`;
+}
+
 async function init() {
   cargarSalud(); // no bloquea el resto, es independiente
   await Promise.all([cargarTiendas(), cargarFeedbackPropio()]);
+  renderTiendas();
   await cargarRecomendaciones();
 }
 init();
