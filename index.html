@@ -185,11 +185,12 @@ function stripeClass(url) {
 }
 
 function disponibilidadBadgeHtml(disp) {
-  if (!disp || disp === 'Sin dato') return '';
+  if (!disp) return '';
   const estilo = {
     'Disponible': 'bg-mossbg text-moss',
     'Agotado': 'bg-claybg text-clay',
-    'Revisar': 'bg-ochrebg text-ochre'
+    'Revisar': 'bg-ochrebg text-ochre',
+    'Sin dato': 'bg-paper text-inkmuted'
   }[disp] || 'bg-paper text-inkmuted';
   return `<span class="inline-block text-sm font-medium px-2.5 py-1 rounded ${estilo}">${disp}</span>`;
 }
