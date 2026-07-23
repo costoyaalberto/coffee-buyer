@@ -112,6 +112,18 @@
         </details>
       </div>
 
+      <details id="tiendaPanel" class="relative mt-2">
+        <summary class="list-none cursor-pointer text-sm px-3 py-2 rounded-lg border border-line flex items-center justify-between text-ink">
+          <span id="tiendaLabel">Tienda</span><span class="text-inkmuted text-xs">▾</span>
+        </summary>
+        <div class="absolute z-30 mt-1 w-full bg-surface border border-line rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto">
+          <input id="tiendaBuscar" type="text" placeholder="Buscar tienda…" class="w-full text-base border border-line rounded-md px-2 py-1 mb-2 bg-paper">
+          <div id="tiendaOpciones" class="flex flex-col gap-1"></div>
+        </div>
+      </details>
+
+      <button id="toggleOfertas" onclick="toggleSoloOfertas()" class="w-full mt-2 text-sm font-medium py-2 rounded-lg border border-line bg-paper text-inkmuted">🔥 Solo ofertas hoy</button>
+
       <div class="mt-3">
         <div class="flex items-center justify-between text-sm font-mono text-inkmuted mb-1">
           <span class="uppercase tracking-wide">Precio/kg</span>
@@ -216,7 +228,7 @@ async function cargarAlertas() {
     const res = await fetch(API_URL + '?action=alertas');
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    data.items.forEach(a => { if (a.url) alertasPorUrl[a.url] = a; });
+    data.items.forEach(a => { if (a.url) alertasPorUrl[a.url.trim().toLowerCase()] = a; });
   } catch (err) {
     // Si falla, simplemente no se muestra el badge de alerta — no bloquea el resto.
   }
@@ -226,29 +238,31 @@ async function cargarAlertas() {
 // último registro"), no un valor fijo — se mapea por palabra clave contenida,
 // no por igualdad exacta, para tolerar cambios de redacción del motor.
 function alertaInfoHtml(url) {
-  const a = alertasPorUrl[url];
+  const a = alertasPorUrl[String(url || '').trim().toLowerCase()];
   if (!a || !a.tipoAlerta) return '';
   const t = a.tipoAlerta.toLowerCase();
   if (t.includes('sin alerta')) return '';
 
-  let icon, label;
+  let icon, label, colorClass;
   if (t.includes('sospech')) {
-    icon = '⚠️'; label = 'Precio sospechoso';
+    icon = '⚠️'; label = 'Precio sospechoso'; colorClass = 'bg-claybg text-clay';
   } else if (t.includes('mínimo') || t.includes('minimo')) {
-    icon = '💰'; label = 'Nuevo mínimo';
+    icon = '💰'; label = 'Nuevo mínimo'; colorClass = 'bg-ochrebg text-ochre';
   } else if (t.includes('volvió') || t.includes('volvio') || t.includes('stock')) {
-    icon = '📦'; label = 'Volvió stock';
+    icon = '📦'; label = 'Volvió stock'; colorClass = 'bg-mossbg text-moss';
   } else if (t.includes('baja') || t.includes('bajó') || t.includes('bajo')) {
-    icon = '🔥';
+    icon = '🔥'; colorClass = 'bg-claybg text-clay';
     const pct = parseNum(a.variacionVsAnterior);
+    const anterior = parseNum(a.precioAnterior);
     label = pct !== null ? `Bajó ${Math.abs(Math.round(pct))}%` : 'Bajó de precio';
+    if (anterior !== null) label += ` · antes $${fmtPrecio(anterior)}`;
   } else {
     // Tipo de alerta no reconocido por palabra clave — se muestra igual,
     // sin ocultar en silencio, para que se note si el motor agregó una categoría nueva.
-    icon = '🔔'; label = a.tipoAlerta;
+    icon = '🔔'; label = a.tipoAlerta; colorClass = 'bg-ochrebg text-ochre';
   }
 
-  const badge = `<span class="inline-block text-sm font-medium px-2.5 py-1 rounded bg-ochrebg text-ochre">${icon} ${label}</span>`;
+  const badge = `<span class="inline-block text-sm font-medium px-2.5 py-1 rounded ${colorClass}">${icon} ${label}</span>`;
   const cta = a.accionSugerida ? `<p class="text-base font-semibold text-ink mt-1.5">${a.accionSugerida}</p>` : '';
   return badge + cta;
 }
@@ -532,7 +546,7 @@ async function cargarRecomendaciones() {
 
 let todosLosCafes = [];
 let filtradosActuales = [];
-const filtroState = { origenes: new Set(), procesos: new Set(), precioMin: null, precioMax: null };
+const filtroState = { origenes: new Set(), procesos: new Set(), tiendas: new Set(), soloOfertas: false, precioMin: null, precioMax: null };
 
 // Los campos "Origen" y "Proceso" a veces traen varios valores en un mismo
 // texto (ej: "Natural, Lavado"). Se separan en tokens únicos para armar las
@@ -563,8 +577,17 @@ function renderOpciones(containerId, tokens, selectedSet, onChange) {
 function initFiltros(items) {
   const origenes = tokensUnicos(items, 'origen');
   const procesos = tokensUnicos(items, 'proceso');
+  const tiendas = tokensUnicos(items, 'tienda');
   renderOpciones('origenOpciones', origenes, filtroState.origenes, aplicarFiltros);
   renderOpciones('procesoOpciones', procesos, filtroState.procesos, aplicarFiltros);
+  renderOpciones('tiendaOpciones', tiendas, filtroState.tiendas, aplicarFiltros);
+
+  document.getElementById('tiendaBuscar').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('#tiendaOpciones label').forEach(l => {
+      l.style.display = l.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
 
   document.getElementById('origenBuscar').addEventListener('input', (e) => {
     const q = e.target.value.toLowerCase();
@@ -600,10 +623,26 @@ function initFiltros(items) {
   document.getElementById('limpiarFiltros').addEventListener('click', () => {
     filtroState.origenes.clear();
     filtroState.procesos.clear();
+    filtroState.tiendas.clear();
+    filtroState.soloOfertas = false;
+    document.getElementById('toggleOfertas').className = 'w-full mt-2 text-sm font-medium py-2 rounded-lg border border-line bg-paper text-inkmuted';
     document.querySelectorAll('#filtros input[type=checkbox]').forEach(cb => cb.checked = false);
     precioMin.value = min; precioMax.value = max;
     onPrecioChange();
   });
+}
+
+function tieneAlertaActiva(url) {
+  const a = alertasPorUrl[String(url || '').trim().toLowerCase()];
+  return !!(a && a.tipoAlerta && !a.tipoAlerta.toLowerCase().includes('sin alerta'));
+}
+
+function toggleSoloOfertas() {
+  filtroState.soloOfertas = !filtroState.soloOfertas;
+  const btn = document.getElementById('toggleOfertas');
+  btn.className = 'w-full mt-2 text-sm font-medium py-2 rounded-lg border border-line ' +
+    (filtroState.soloOfertas ? 'bg-claybg text-clay' : 'bg-paper text-inkmuted');
+  aplicarFiltros();
 }
 
 function contieneAlguno(valorCampo, seleccionados) {
@@ -613,11 +652,13 @@ function contieneAlguno(valorCampo, seleccionados) {
 }
 
 function aplicarFiltros() {
-  const { origenes, procesos, precioMin, precioMax } = filtroState;
+  const { origenes, procesos, tiendas, soloOfertas, precioMin, precioMax } = filtroState;
 
   const filtrados = todosLosCafes.filter(c => {
     if (!contieneAlguno(c.origen, origenes)) return false;
     if (!contieneAlguno(c.proceso, procesos)) return false;
+    if (!contieneAlguno(c.tienda, tiendas)) return false;
+    if (soloOfertas && !tieneAlertaActiva(c.url)) return false;
     const precio = parseNum(c.precioKg);
     if (precio !== null && (precio < precioMin || precio > precioMax)) return false;
     return true;
@@ -627,6 +668,7 @@ function aplicarFiltros() {
 
   document.getElementById('origenLabel').innerText = origenes.size ? `Origen (${origenes.size})` : 'Origen';
   document.getElementById('procesoLabel').innerText = procesos.size ? `Proceso (${procesos.size})` : 'Proceso';
+  document.getElementById('tiendaLabel').innerText = tiendas.size ? `Tienda (${tiendas.size})` : 'Tienda';
   document.getElementById('resultCount').innerText = `${filtrados.length} de ${todosLosCafes.length} cafés`;
 
   document.getElementById('list').innerHTML = filtrados.length
