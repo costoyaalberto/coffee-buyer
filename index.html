@@ -209,6 +209,50 @@ function feedbackBadgeHtml(url) {
   return `<span class="inline-block text-sm font-medium px-2 py-0.5 rounded mt-1.5 tracking-wide ${estilo}">✓ ${texto}</span>`;
 }
 
+let alertasPorUrl = {};
+
+async function cargarAlertas() {
+  try {
+    const res = await fetch(API_URL + '?action=alertas');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    data.items.forEach(a => { if (a.url) alertasPorUrl[a.url] = a; });
+  } catch (err) {
+    // Si falla, simplemente no se muestra el badge de alerta — no bloquea el resto.
+  }
+}
+
+// Alertas_Precio trae "Tipo alerta" como texto libre (ej. "Baja fuerte vs
+// último registro"), no un valor fijo — se mapea por palabra clave contenida,
+// no por igualdad exacta, para tolerar cambios de redacción del motor.
+function alertaInfoHtml(url) {
+  const a = alertasPorUrl[url];
+  if (!a || !a.tipoAlerta) return '';
+  const t = a.tipoAlerta.toLowerCase();
+  if (t.includes('sin alerta')) return '';
+
+  let icon, label;
+  if (t.includes('sospech')) {
+    icon = '⚠️'; label = 'Precio sospechoso';
+  } else if (t.includes('mínimo') || t.includes('minimo')) {
+    icon = '💰'; label = 'Nuevo mínimo';
+  } else if (t.includes('volvió') || t.includes('volvio') || t.includes('stock')) {
+    icon = '📦'; label = 'Volvió stock';
+  } else if (t.includes('baja') || t.includes('bajó') || t.includes('bajo')) {
+    icon = '🔥';
+    const pct = parseNum(a.variacionVsAnterior);
+    label = pct !== null ? `Bajó ${Math.abs(Math.round(pct))}%` : 'Bajó de precio';
+  } else {
+    // Tipo de alerta no reconocido por palabra clave — se muestra igual,
+    // sin ocultar en silencio, para que se note si el motor agregó una categoría nueva.
+    icon = '🔔'; label = a.tipoAlerta;
+  }
+
+  const badge = `<span class="inline-block text-sm font-medium px-2.5 py-1 rounded bg-ochrebg text-ochre">${icon} ${label}</span>`;
+  const cta = a.accionSugerida ? `<p class="text-base font-semibold text-ink mt-1.5">${a.accionSugerida}</p>` : '';
+  return badge + cta;
+}
+
 function tiendaInfoHtml(nombreTienda) {
   const t = tiendasPorNombre[String(nombreTienda || '').trim()];
   if (!t) return '';
@@ -233,6 +277,8 @@ function cardHtml(c, i) {
   return `
   <div class="relative overflow-hidden bg-surface border border-line ${stripeClass(c.url)} border-l-4 rounded-2xl p-4">
     <span class="absolute -top-4 -right-1 font-display font-bold text-[84px] leading-none text-ink opacity-[0.05] pointer-events-none select-none">${numRanking}</span>
+
+    ${alertaInfoHtml(c.url) ? `<div class="relative z-10 mb-2.5">${alertaInfoHtml(c.url)}</div>` : ''}
 
     <div class="relative z-10 flex items-start gap-3">
       <div class="w-8 h-8 rounded-full bg-paper border border-line flex items-center justify-center text-sm font-mono text-espresso shrink-0">${numRanking}</div>
@@ -626,7 +672,7 @@ function renderTiendas() {
 
 async function init() {
   cargarSalud(); // no bloquea el resto, es independiente
-  await Promise.all([cargarTiendas(), cargarFeedbackPropio()]);
+  await Promise.all([cargarTiendas(), cargarFeedbackPropio(), cargarAlertas()]);
   renderTiendas();
   await cargarRecomendaciones();
 }
