@@ -68,8 +68,8 @@
 
   <!-- ====== CONFIGURACIÓN: pegar acá la URL /exec del deploy ====== -->
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbycrx7cxNJlfsXbJNYfWOcWKUxhzLRXhvS6Ndv0zw3L3DEjZUFrIkSpZIZTOj8vkdBq/exec';
-  </script>
+      const API_URL = 'https://script.google.com/macros/s/AKfycbycrx7cxNJlfsXbJNYfWOcWKUxhzLRXhvS6Ndv0zw3L3DEjZUFrIkSpZIZTOj8vkdBq/exec';
+    </script>
 
   <div class="max-w-md mx-auto px-3 pt-4 pb-24">
 
@@ -189,11 +189,11 @@ function colorConfianza(score) {
 // se ve de reojo sin necesidad de leer texto, para el caso de uso "en la calle".
 function stripeClass(url) {
   const f = feedbackPorUrl[url];
-  if (!f || !f.estadoCompra) return 'border-line';
-  if (f.repetiria === 'Sí') return 'border-moss';
-  if (f.repetiria === 'Tal vez') return 'border-ochre';
-  if (f.repetiria === 'No') return 'border-declinado';
-  return 'border-inkmuted';
+  if (!f || !f.estadoCompra) return 'border-l-line';
+  if (f.repetiria === 'Sí') return 'border-l-moss';
+  if (f.repetiria === 'Tal vez') return 'border-l-ochre';
+  if (f.repetiria === 'No') return 'border-l-declinado';
+  return 'border-l-inkmuted';
 }
 
 function disponibilidadBadgeHtml(disp) {
@@ -456,8 +456,8 @@ async function guardarFeedback(i) {
 
     const card = document.getElementById('feedback-badge-' + i).closest('.border-l-4');
     if (card) {
-      card.classList.remove('border-line', 'border-moss', 'border-ochre', 'border-declinado', 'border-inkmuted');
-      card.classList.add(stripeClass(c.url).replace('border-', 'border-'));
+      card.classList.remove('border-l-line', 'border-l-moss', 'border-l-ochre', 'border-l-declinado', 'border-l-inkmuted');
+      card.classList.add(stripeClass(c.url));
     }
   } catch (err) {
     statusEl.innerText = 'No se pudo guardar: ' + err.message;
