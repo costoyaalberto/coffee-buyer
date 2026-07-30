@@ -68,8 +68,8 @@
 
   <!-- ====== CONFIGURACIÓN: pegar acá la URL /exec del deploy ====== -->
   <script>
-      const API_URL = 'https://script.google.com/macros/s/AKfycbycrx7cxNJlfsXbJNYfWOcWKUxhzLRXhvS6Ndv0zw3L3DEjZUFrIkSpZIZTOj8vkdBq/exec';
-    </script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbycrx7cxNJlfsXbJNYfWOcWKUxhzLRXhvS6Ndv0zw3L3DEjZUFrIkSpZIZTOj8vkdBq/exec';
+  </script>
 
   <div class="max-w-md mx-auto px-3 pt-4 pb-24">
 
@@ -243,28 +243,29 @@ function alertaInfoHtml(url) {
   const t = a.tipoAlerta.toLowerCase();
   if (t.includes('sin alerta')) return '';
 
-  let icon, label, colorClass;
+  let icon, colorClass;
   if (t.includes('sospech')) {
-    icon = '⚠️'; label = 'Precio sospechoso'; colorClass = 'bg-claybg text-clay';
+    icon = '⚠️'; colorClass = 'bg-claybg text-clay';
   } else if (t.includes('mínimo') || t.includes('minimo')) {
-    icon = '💰'; label = 'Nuevo mínimo'; colorClass = 'bg-ochrebg text-ochre';
+    icon = '💰'; colorClass = 'bg-ochrebg text-ochre';
   } else if (t.includes('volvió') || t.includes('volvio') || t.includes('stock')) {
-    icon = '📦'; label = 'Volvió stock'; colorClass = 'bg-mossbg text-moss';
+    icon = '📦'; colorClass = 'bg-mossbg text-moss';
   } else if (t.includes('baja') || t.includes('bajó') || t.includes('bajo')) {
     icon = '🔥'; colorClass = 'bg-claybg text-clay';
-    const pct = parseNum(a.variacionVsAnterior);
-    const anterior = parseNum(a.precioAnterior);
-    label = pct !== null ? `Bajó ${Math.abs(Math.round(pct))}%` : 'Bajó de precio';
-    if (anterior !== null) label += ` · antes $${fmtPrecio(anterior)}`;
   } else {
     // Tipo de alerta no reconocido por palabra clave — se muestra igual,
     // sin ocultar en silencio, para que se note si el motor agregó una categoría nueva.
-    icon = '🔔'; label = a.tipoAlerta; colorClass = 'bg-ochrebg text-ochre';
+    icon = '🔔'; colorClass = 'bg-ochrebg text-ochre';
   }
 
-  const badge = `<span class="inline-block text-sm font-medium px-2.5 py-1 rounded ${colorClass}">${icon} ${label}</span>`;
-  const cta = a.accionSugerida ? `<p class="text-base font-semibold text-ink mt-1.5">${a.accionSugerida}</p>` : '';
-  return badge + cta;
+  // El porcentaje no se calcula acá: cada tipo de alerta compara contra algo
+  // distinto (anterior, mínimo, promedio) y elegir el campo equivocado según
+  // el tipo daba números engañosos (ej. "Bajó 0%" en alertas vs. promedio).
+  // "Detalle" ya trae la explicación correcta armada por el motor.
+  const badge = `<span class="inline-block text-sm font-medium px-2.5 py-1 rounded ${colorClass}">${icon} ${a.tipoAlerta}</span>`;
+  const detalle = a.detalle ? `<p class="text-sm text-inkmuted mt-1.5">${a.detalle}</p>` : '';
+  const cta = a.accionSugerida ? `<p class="text-base font-semibold text-ink mt-1">${a.accionSugerida}</p>` : '';
+  return badge + detalle + cta;
 }
 
 function tiendaInfoHtml(nombreTienda) {
