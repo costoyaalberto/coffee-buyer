@@ -289,6 +289,10 @@ function formatosHtml(c) {
   const agot = Array.isArray(c.formatosAgotados) ? c.formatosAgotados : [];
   if (disp.length === 0 && agot.length === 0) return '';
 
+  if (disp.length === 0) {
+    return `<p class="text-sm text-inkmuted mt-1">Agotado en todos los formatos: ${agot.map(g => g + ' g').join(', ')}</p>`;
+  }
+
   const partes = disp.map(g => `${g} g`);
   const agotTxt = agot.length ? ` (agotado: ${agot.map(g => g + ' g').join(', ')})` : '';
   return `<p class="text-sm text-inkmuted mt-1">Disponible en: ${partes.join(' · ')}${agotTxt}</p>`;
