@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -68,7 +68,7 @@
 
   <!-- ====== CONFIGURACIÓN: pegar acá la URL /exec del deploy ====== -->
   <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbycrx7cxNJlfsXbJNYfWOcWKUxhzLRXhvS6Ndv0zw3L3DEjZUFrIkSpZIZTOj8vkdBq/exec';
+ const API_URL = 'https://script.google.com/macros/s/AKfycbycrx7cxNJlfsXbJNYfWOcWKUxhzLRXhvS6Ndv0zw3L3DEjZUFrIkSpZIZTOj8vkdBq/exec';
   </script>
 
   <div class="max-w-md mx-auto px-3 pt-4 pb-24">
@@ -446,6 +446,16 @@ async function guardarFeedback(i) {
     statusEl.innerText = data.nueva ? '✓ Guardado' : '✓ Actualizado';
     statusEl.className = 'text-sm text-center mt-1.5 text-moss';
     statusEl.innerText += ' — se reflejará en la tarjeta cuando el motor vuelva a correr';
+
+    feedbackDetallePorGrupo[c.displayGroupId] = Object.assign({ displayGroupId: c.displayGroupId }, body);
+
+    if (body.estadoCompra === 'Descartado') {
+      statusEl.innerText = '✓ Descartado — sacando de la lista…';
+      setTimeout(() => {
+        todosLosCafes = todosLosCafes.filter(x => x.displayGroupId !== c.displayGroupId);
+        aplicarFiltros();
+      }, 900);
+    }
   } catch (err) {
     statusEl.innerText = 'No se pudo guardar: ' + err.message;
     statusEl.className = 'text-sm text-center mt-1.5 text-clay';
@@ -477,6 +487,36 @@ async function cargarSalud() {
     banner.className = 'rounded-lg px-3 py-2 mb-3 text-sm font-mono border border-line bg-surface text-inkmuted';
     banner.innerText = 'No se pudo verificar el estado del sistema';
   }
+}
+
+let feedbackDetallePorGrupo = {};
+
+async function cargarFeedbackDetallado() {
+  try {
+    const res = await fetch(API_URL + '?action=feedback');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    data.items.forEach(f => { if (f.displayGroupId) feedbackDetallePorGrupo[f.displayGroupId] = f; });
+  } catch (err) {
+    // Si falla, el formulario simplemente no precarga — no bloquea el resto de la app.
+  }
+}
+
+function precargarFeedback(i, displayGroupId) {
+  const f = feedbackDetallePorGrupo[displayGroupId];
+  if (!f) return;
+  const set = (id, valor) => { const el = document.getElementById(id); if (el && valor) el.value = valor; };
+  set('fb-estado-' + i, f.estadoCompra);
+  set('fb-repetiria-' + i, f.repetiria);
+  set('fb-comentario-' + i, f.comentario);
+  set('fb-rating-' + i, f.ratingPersonal);
+  set('fb-acidez-' + i, f.acidezPercibida);
+  set('fb-dulzor-' + i, f.dulzorPercibido);
+  set('fb-cuerpo-' + i, f.cuerpoPercibido);
+  set('fb-amargor-' + i, f.amargorPercibido);
+  set('fb-tostado-' + i, f.tostadoPercibido);
+  set('fb-espresso-' + i, f.resultadoEspresso);
+  set('fb-leche-' + i, f.resultadoConLeche);
 }
 
 let tiendasPorNombre = {};
@@ -639,6 +679,8 @@ function aplicarFiltros() {
   document.getElementById('list').innerHTML = filtrados.length
     ? filtrados.map((c, i) => cardHtml(c, i)).join('')
     : '<p class="text-center text-base text-inkmuted py-10 font-mono">Sin resultados con estos filtros.</p>';
+
+  filtrados.forEach((c, i) => precargarFeedback(i, c.displayGroupId));
 }
 
 function cambiarVista(vista) {
@@ -677,7 +719,7 @@ function renderTiendas() {
 
 async function init() {
   cargarSalud(); // no bloquea el resto, es independiente
-  await cargarTiendas();
+  await Promise.all([cargarTiendas(), cargarFeedbackDetallado()]);
   renderTiendas();
   await cargarRecomendaciones();
 }
