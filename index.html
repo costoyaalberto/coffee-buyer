@@ -68,7 +68,7 @@
 
   <!-- ====== CONFIGURACIÓN: pegar acá la URL /exec del deploy ====== -->
   <script>
- const API_URL = 'https://script.google.com/macros/s/AKfycbycrx7cxNJlfsXbJNYfWOcWKUxhzLRXhvS6Ndv0zw3L3DEjZUFrIkSpZIZTOj8vkdBq/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbycrx7cxNJlfsXbJNYfWOcWKUxhzLRXhvS6Ndv0zw3L3DEjZUFrIkSpZIZTOj8vkdBq/exec';
   </script>
 
   <div class="max-w-md mx-auto px-3 pt-4 pb-24">
@@ -114,7 +114,7 @@
 
       <details id="tiendaPanel" class="relative mt-2">
         <summary class="list-none cursor-pointer text-sm px-3 py-2 rounded-lg border border-line flex items-center justify-between text-ink">
-          <span id="tiendaLabel">Tienda</span><span class="text-inkmuted text-xs">▾</span>
+          <span id="tiendaLabel">Tienda</span><span class="text-inkmuted text-sm">▾</span>
         </summary>
         <div class="absolute z-30 mt-1 w-full bg-surface border border-line rounded-lg shadow-lg p-2 max-h-64 overflow-y-auto">
           <input id="tiendaBuscar" type="text" placeholder="Buscar tienda…" class="w-full text-base border border-line rounded-md px-2 py-1 mb-2 bg-paper">
@@ -338,7 +338,7 @@ function cardHtml(c, i) {
       </div>
       <div class="flex items-center gap-2.5">
         <div class="flex flex-col items-end gap-1">
-          <span class="text-[11px] font-mono text-inkmuted tracking-wide">CONF ${fmtScore(c.confianzaEstimacion)}</span>
+          <span class="text-sm font-mono text-inkmuted tracking-wide">CONF ${fmtScore(c.confianzaEstimacion)}</span>
           <div class="w-16 h-[5px] rounded-full bg-line overflow-hidden">
             <div class="h-full rounded-full" style="width:${pctConf}%; background:${colorConfianza(scoreConf)}"></div>
           </div>
@@ -349,7 +349,7 @@ function cardHtml(c, i) {
     </div>
 
     <div id="detail-${i}" class="relative z-10 hidden mt-3 pt-3 border-t border-line text-sm text-inkmuted space-y-1.5">
-      <p class="text-[11px] font-mono text-inkmuted">AFINIDAD ${fmtScore(c.afinidadPersonal)} · CONVENIENCIA ${fmtScore(c.convenienciaCompra)}</p>
+      <p class="text-sm font-mono text-inkmuted">AFINIDAD ${fmtScore(c.afinidadPersonal)} · CONVENIENCIA ${fmtScore(c.convenienciaCompra)}</p>
       ${tiendaInfoHtml(c.tienda)}
 
       <div class="pt-3 mt-2 border-t border-line">
